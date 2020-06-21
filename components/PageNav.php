@@ -8,6 +8,7 @@ class PageNav extends \System\Classes\BaseComponent
 
     public function onRun()
     {
+        traceLog('Deprecated component. See staticMenu component.');
         $this->page['activePageId'] = null;
         if (method_exists($this->controller, 'getPage') AND $page = $this->controller->getPage())
             $this->page['activePageId'] = $page->getId();
@@ -19,7 +20,8 @@ class PageNav extends \System\Classes\BaseComponent
 
     public function getPages($navigation)
     {
-        $this->loadPages();
+        if (!$this->allPages)
+            $this->loadPages();
 
         return $this->allPages->filter(function ($page) use ($navigation) {
             return in_array($navigation, (array)$page->navigation);
@@ -28,10 +30,10 @@ class PageNav extends \System\Classes\BaseComponent
 
     protected function loadPages()
     {
-        if (!$this->allPages)
-            $this->allPages = Pages_model::select('permalink_slug', 'name', 'navigation')
-                                         ->isEnabled()->get();
+        $result = Pages_model::select(
+            'permalink_slug', 'name', 'navigation'
+        )->isEnabled()->get();
 
-        return $this->allPages;
+        return $this->allPages = $result;
     }
 }

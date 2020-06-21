@@ -1,14 +1,48 @@
 <?php namespace Igniter\Pages\Models;
 
+use Igniter\Flame\Database\Traits\Sortable;
+use Main\Classes\ThemeManager;
+use Main\Template\Layout;
+
 /**
  * Pages Model Class
- *
- * @package Admin
  */
 class Pages_model extends \System\Models\Pages_model
 {
-    protected $fillable = ['language_id', 'name', 'title', 'heading', 'content', 'meta_description',
-        'meta_keywords', 'layout_id', 'navigation', 'date_added', 'date_updated', 'status'];
+    use Sortable;
+
+    const SORT_ORDER = 'priority';
+
+    public function getLayoutOptions()
+    {
+        $result = [];
+        $theme = ThemeManager::instance()->getActiveTheme();
+        $layouts = Layout::listInTheme($theme, TRUE);
+        foreach ($layouts as $layout) {
+            if (!$layout->hasComponent('staticPage')) continue;
+
+            $baseName = $layout->getBaseFileName();
+            $result[$baseName] = strlen($layout->description) ? $layout->description : $baseName;
+        }
+
+        return $result;
+    }
+
+    public function getLayoutObject()
+    {
+        if (!$layoutId = $this->layout) {
+            $layouts = $this->getLayoutOptions();
+            $layoutId = count($layouts) ? array_keys($layouts)[0] : null;
+        }
+
+        if (!$layoutId)
+            return null;
+
+        if (!$layout = Layout::load($this->theme, $layoutId))
+            return null;
+
+        return $layout;
+    }
 
     public function getContentAttribute($value)
     {

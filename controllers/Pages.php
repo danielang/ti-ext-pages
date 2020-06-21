@@ -1,6 +1,7 @@
 <?php namespace Igniter\Pages\Controllers;
 
 use AdminMenu;
+use Igniter\Pages\Models\Menu;
 
 class Pages extends \Admin\Classes\AdminController
 {
@@ -25,12 +26,12 @@ class Pages extends \Admin\Classes\AdminController
         'create' => [
             'title' => 'lang:admin::lang.form.create_title',
             'redirect' => 'igniter/pages/pages/edit/{page_id}',
-            'redirectClose' => 'pages',
+            'redirectClose' => 'igniter/pages/pages',
         ],
         'edit' => [
             'title' => 'lang:admin::lang.form.edit_title',
             'redirect' => 'igniter/pages/pages/edit/{page_id}',
-            'redirectClose' => 'pages',
+            'redirectClose' => 'igniter/pages/pages',
         ],
         'delete' => [
             'redirect' => 'igniter/pages/pages',
@@ -38,7 +39,7 @@ class Pages extends \Admin\Classes\AdminController
         'configFile' => 'pages_model',
     ];
 
-    protected $requiredPermissions = 'Site.Pages';
+    protected $requiredPermissions = 'Igniter.Pages.*';
 
     public function __construct()
     {
@@ -47,16 +48,20 @@ class Pages extends \Admin\Classes\AdminController
         AdminMenu::setContext('pages', 'design');
     }
 
+    public function index()
+    {
+        if ($this->getUser()->hasPermission('Igniter.PageMenus.Manage'))
+            Menu::syncAll();
+
+        $this->asExtension('ListController')->index();
+    }
+
     public function formValidate($model, $form)
     {
         $rules[] = ['language_id', 'lang:igniter.pages::default.label_language', 'required|integer'];
-        $rules[] = ['name', 'lang:igniter.pages::default.label_name', 'required|min:2|max:255'];
         $rules[] = ['title', 'lang:igniter.pages::default.label_title', 'required|min:2|max:255'];
         $rules[] = ['permalink_slug', 'lang:igniter.pages::default.label_permalink_slug', 'alpha_dash|max:255'];
         $rules[] = ['content', 'lang:igniter.pages::default.label_content', 'required|min:2'];
-        $rules[] = ['meta_description', 'lang:igniter.pages::default.label_meta_description', 'min:2|max:255'];
-        $rules[] = ['meta_keywords', 'lang:igniter.pages::default.label_meta_keywords', 'min:2|max:255'];
-        $rules[] = ['layout_id', 'lang:igniter.pages::default.label_layout', 'integer'];
         $rules[] = ['navigation.*', 'lang:igniter.pages::default.label_navigation', 'required'];
         $rules[] = ['status', 'lang:admin::lang.label_status', 'required|integer'];
 
